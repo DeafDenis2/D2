@@ -1,28 +1,849 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Steam</title>
-    
+    <title>Reverse Engineering Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+         :root {
+            --primary: #00c6ff;
+            --secondary: #0072ff;
+            --dark: #0c0c0c;
+            --dark-blue: #1a1a2e;
+            --card-bg: rgba(30, 30, 46, 0.85);
+            --text-light: #e0e0e0;
+            --text-gray: #a0a0a0;
+            --nav-bg: rgba(10, 10, 20, 0.95);
+            --success: #00ff88;
+            --warning: #ffaa00;
+        }
+        
+        body {
+            background: linear-gradient(135deg, var(--dark), var(--dark-blue));
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+        /* Navigation Styles */
+        
+        .navbar {
+            background: var(--nav-bg);
+            padding: 0.8rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 114, 255, 0.2);
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-item {
+            position: relative;
+        }
+        
+        .nav-link {
+            color: var(--text-light);
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.5rem 0;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary);
+        }
+        
+        .dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: var(--nav-bg);
+            min-width: 220px;
+            border-radius: 0 0 8px 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 114, 255, 0.2);
+            border-top: none;
+            z-index: 1001;
+        }
+        
+        .dropdown-item {
+            display: block;
+            padding: 0.8rem 1.2rem;
+            color: var(--text-light);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+        
+        .dropdown-item:hover {
+            background: rgba(0, 114, 255, 0.1);
+            color: var(--primary);
+            padding-left: 1.5rem;
+        }
+        
+        .nav-item:hover .dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .hamburger {
+            display: none;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-light);
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+        
+        .title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 15px rgba(0, 114, 255, 0.3);
+            position: relative;
+            display: inline-block;
+            line-height: 1.2;
+        }
+        
+        .title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--secondary), transparent);
+            border-radius: 50%;
+        }
+        
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.3rem);
+            color: var(--text-gray);
+            margin-bottom: 1.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .welcome {
+            font-size: clamp(1.2rem, 3.5vw, 1.6rem);
+            color: var(--primary);
+            margin-bottom: 2rem;
+            text-align: center;
+            animation: pulse 2s infinite;
+            font-weight: 600;
+        }
+        
+        @keyframes pulse {
+            0% {
+                opacity: 0.7;
+            }
+            50% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0.7;
+            }
+        }
+        
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .tool-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 114, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.1), rgba(0, 114, 255, 0.1));
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 25px rgba(0, 114, 255, 0.2);
+            border-color: rgba(0, 114, 255, 0.5);
+        }
+        
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+        
+        .tool-icon {
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            text-align: center;
+        }
+        
+        .tool-name {
+            font-size: clamp(1.3rem, 3.5vw, 1.7rem);
+            margin-bottom: 1rem;
+            color: #ffffff;
+            text-align: center;
+            font-weight: 700;
+        }
+        
+        .tool-desc {
+            color: var(--text-gray);
+            line-height: 1.6;
+            font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+            flex-grow: 1;
+        }
+        
+        .binary-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.07;
+        }
+        
+        .binary-digit {
+            position: absolute;
+            color: var(--primary);
+            font-family: monospace;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            animation: fall linear infinite;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh);
+            }
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding: 2rem;
+            color: #666;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+        
+        .glow {
+            text-shadow: 0 0 10px rgba(0, 198, 255, 0.7);
+        }
+        
+        .tagline {
+            font-style: italic;
+            margin-top: 0.5rem;
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+        }
+        /* Installer Section */
+        
+        .installer-section {
+            margin: 4rem 0;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 2.5rem;
+            border: 1px solid rgba(0, 114, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .installer-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .installer-icon {
+            font-size: 2.5rem;
+            color: var(--primary);
+        }
+        
+        .installer-title {
+            font-size: 1.8rem;
+            color: #fff;
+            font-weight: 700;
+        }
+        
+        .installer-description {
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+        
+        .code-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            position: relative;
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--success);
+            overflow-x: auto;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 114, 255, 0.2);
+            border: 1px solid rgba(0, 114, 255, 0.5);
+            color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        
+        .copy-btn:hover {
+            background: rgba(0, 114, 255, 0.4);
+        }
+        
+        .install-btn {
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .install-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+        }
+        
+        .install-btn:active {
+            transform: translateY(0);
+        }
+        
+        .status-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .status-success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .status-error {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+        }
+        
+        .powershell-icon {
+            color: #0072ff;
+        }
+        /* Section for smooth scrolling */
+        
+        .section {
+            scroll-margin-top: 80px;
+        }
+        /* Responsive adjustments */
+        
+        @media (max-width: 768px) {
+            .nav-menu {
+                position: fixed;
+                top: 60px;
+                right: -100%;
+                flex-direction: column;
+                background: var(--nav-bg);
+                width: 80%;
+                max-width: 300px;
+                height: calc(100vh - 60px);
+                padding: 2rem;
+                transition: right 0.3s ease;
+                box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
+                overflow-y: auto;
+            }
+            .nav-menu.active {
+                right: 0;
+            }
+            .dropdown {
+                position: static;
+                opacity: 1;
+                visibility: visible;
+                transform: none;
+                box-shadow: none;
+                border: none;
+                background: transparent;
+                margin-left: 1rem;
+                margin-top: 0.5rem;
+                display: none;
+            }
+            .nav-item:hover .dropdown {
+                display: block;
+            }
+            .hamburger {
+                display: block;
+            }
+            .container {
+                padding: 1.5rem 1rem;
+            }
+            .tools-grid {
+                gap: 1.5rem;
+            }
+            .tool-card {
+                padding: 1.5rem;
+            }
+            .installer-section {
+                padding: 1.5rem;
+            }
+            .code-block {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem 0.8rem;
+            }
+            .tools-grid {
+                gap: 1rem;
+            }
+            .tool-card {
+                padding: 1.2rem;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <h1 class="ww">Новости официально: BakSash</h1>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <i class="fas fa-microchip"></i> RE Tools
+            </a>
 
-    <p div class="Stext">Steam введет санкция против BakSash</p>
-    <p div class="delete">У тебя проблем лучше удалить Steam</p>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#tools" class="nav-link">Tools</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        Reverse Engineering 
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#system-informer" class="dropdown-item">
+                            <i class="fas fa-binoculars"></i> System Informer
+                        </a>
+                        <a href="#dnspy" class="dropdown-item">
+                            <i class="fas fa-code"></i> DnSpy
+                        </a>
+                        <a href="#x64dbg" class="dropdown-item">
+                            <i class="fas fa-bug"></i> x64dbg
+                        </a>
+                        <a href="#resources" class="dropdown-item">
+                            <i class="fas fa-book"></i> Resources
+                        </a>
+                        <a href="#tutorials" class="dropdown-item">
+                            <i class="fas fa-graduation-cap"></i> Tutorials
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        SpaceTheme Installer
+                        <i class="fas fa-chevron-down"></i>
+                    </a>
+                    <div class="dropdown">
+                        <a href="#installer" class="dropdown-item">
+                            <i class="fab fa-windows"></i> Windows Installer
+                        </a>
+                        <a href="#" class="dropdown-item" id="powershell-install">
+                            <i class="fas fa-terminal powershell-icon"></i> PowerShell
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fab fa-linux"></i> Linux Script
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fab fa-apple"></i> macOS Package
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="#about" class="nav-link">About</a>
+                </li>
+                <li class="nav-item">
+                    <a href="#contact" class="nav-link">Contact</a>
+                </li>
+            </ul>
 
+            <div class="hamburger">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
 
+    <div class="binary-animation" id="binaryAnimation"></div>
 
-    <ul>
-  <li><a class="active" href="#home">Главный</a></li>
-  <li><a href="#news">Новости</a></li>
-  <li><a href="#contact">Контаст</a></li>
-  <li><a href="#about">О Нас</a></li>
-  <li><a herf="./Twitch.html">Twitch</a></li>
-</ul>
+    <div class="container">
+        <header>
+            <h1 class="title">Reverse Engineering</h1>
+            <p class="subtitle">Advanced tools and techniques for deep software analysis and system understanding</p>
+            <div class="welcome">Welcome to the World of Reverse Engineering</div>
+        </header>
 
+        <main>
+            <!-- SpaceTheme Installer Section -->
+            <div class="installer-section section" id="installer">
+                <div class="installer-header">
+                    <div class="installer-icon">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h2 class="installer-title">SpaceTheme Installer</h2>
+                </div>
 
+                <p class="installer-description">
+                    Install the SpaceTheme customization package with a single command. This will automatically download and apply the SpaceTheme to your system, enhancing your desktop experience with a futuristic space-inspired design.
+                </p>
+
+                <h3>PowerShell Installation</h3>
+                <p>Run the following command in PowerShell to install SpaceTheme:</p>
+
+                <div class="code-block">
+                    iwr -useb "https://steambrew.app/install.ps1" | iex
+                    <button class="copy-btn" id="copyCode">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+
+                <button class="install-btn" id="autoInstall">
+                    <i class="fas fa-bolt"></i> Auto Install Now
+                </button>
+
+                <div class="status-message" id="installStatus"></div>
+            </div>
+
+            <div class="tools-grid">
+                <div class="tool-card section" id="system-informer">
+                    <div class="tool-icon"><i class="fas fa-binoculars"></i></div>
+                    <h2 class="tool-name">System Informer</h2>
+                    <p class="tool-desc">A powerful system utility designed to provide detailed information about system resources, processes, and performance metrics. Essential for analyzing running processes, monitoring system behavior, and troubleshooting performance issues.</p>
+                    <p class="tagline">See what's happening under the hood</p>
+                </div>
+
+                <div class="tool-card section" id="dnspy">
+                    <div class="tool-icon"><i class="fas fa-code"></i></div>
+                    <h2 class="tool-name">DnSpy</h2>
+                    <p class="tool-desc">A comprehensive tool to reverse engineer .NET assemblies. It can be used to debug, decompile, and edit assemblies even without source code available, making it invaluable for .NET application analysis and security research.</p>
+                    <p class="tagline">Decompile, debug, discover</p>
+                </div>
+
+                <div class="tool-card section" id="x64dbg">
+                    <div class="tool-icon"><i class="fas fa-bug"></i></div>
+                    <h2 class="tool-name">x64dbg</h2>
+                    <p class="tool-desc">An open-source x64/x32 debugger for Windows. Used for dynamic analysis of binaries, it's a popular alternative to commercial debuggers in the reverse engineering community, featuring a rich plugin ecosystem.</p>
+                    <p class="tagline">Debug with precision and power</p>
+                </div>
+            </div>
+
+            <!-- Additional sections for dropdown links -->
+            <div class="tools-grid" style="margin-top: 4rem;">
+                <div class="tool-card section" id="resources">
+                    <div class="tool-icon"><i class="fas fa-book"></i></div>
+                    <h2 class="tool-name">Resources</h2>
+                    <p class="tool-desc">Explore our curated collection of reverse engineering resources, including documentation, research papers, and community forums. Stay updated with the latest techniques and tools in the field.</p>
+                    <p class="tagline">Learn from the community</p>
+                </div>
+
+                <div class="tool-card section" id="tutorials">
+                    <div class="tool-icon"><i class="fas fa-graduation-cap"></i></div>
+                    <h2 class="tool-name">Tutorials</h2>
+                    <p class="tool-desc">Step-by-step guides and tutorials for beginners and advanced users. Learn how to use reverse engineering tools effectively and understand complex software systems.</p>
+                    <p class="tagline">Master the craft</p>
+                </div>
+
+                <div class="tool-card section" id="about">
+                    <div class="tool-icon"><i class="fas fa-info-circle"></i></div>
+                    <h2 class="tool-name">About Us</h2>
+                    <p class="tool-desc">We are a community of reverse engineering enthusiasts dedicated to sharing knowledge and tools. Our mission is to make software analysis accessible to everyone.</p>
+                    <p class="tagline">Join our community</p>
+                </div>
+            </div>
+        </main>
+
+        <footer class="section" id="contact">
+            <p>Reverse Engineering Tools &copy; 2025 | Explore, Analyze, Understand</p>
+            <p class="tagline">Knowledge through deconstruction</p>
+        </footer>
+    </div>
+
+    <script>
+        // Create binary rain animation
+        function createBinaryRain() {
+            const container = document.getElementById('binaryAnimation');
+            const digits = '01';
+
+            function createDigit() {
+                const digit = document.createElement('div');
+                digit.className = 'binary-digit';
+                digit.textContent = digits[Math.floor(Math.random() * digits.length)];
+                digit.style.left = Math.random() * 100 + 'vw';
+                digit.style.animationDuration = (Math.random() * 10 + 5) + 's';
+                digit.style.opacity = Math.random() * 0.5 + 0.1;
+                digit.style.fontSize = `${Math.random() * 10 + 14}px`;
+                container.appendChild(digit);
+
+                // Remove digit after animation completes
+                setTimeout(() => {
+                    if (digit.parentNode === container) {
+                        digit.remove();
+                    }
+                }, parseFloat(digit.style.animationDuration) * 1000);
+            }
+
+            // Create initial digits
+            for (let i = 0; i < 50; i++) {
+                setTimeout(createDigit, i * 100);
+            }
+
+            // Create digits at intervals
+            setInterval(createDigit, 150);
+        }
+
+        // Add hover effects to tool cards
+        function addCardEffects() {
+            const cards = document.querySelectorAll('.tool-card');
+
+            cards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.classList.add('glow');
+                });
+
+                card.addEventListener('mouseleave', () => {
+                    card.classList.remove('glow');
+                });
+            });
+        }
+
+        // Mobile menu toggle
+        function setupMobileMenu() {
+            const hamburger = document.querySelector('.hamburger');
+            const navMenu = document.querySelector('.nav-menu');
+
+            hamburger.addEventListener('click', () => {
+                navMenu.classList.toggle('active');
+                hamburger.innerHTML = navMenu.classList.contains('active') ?
+                    '<i class="fas fa-times"></i>' :
+                    '<i class="fas fa-bars"></i>';
+            });
+
+            // Close menu when clicking on a link
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                    hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+                });
+            });
+        }
+
+        // Smooth scrolling for anchor links
+        function setupSmoothScrolling() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        }
+
+        // SpaceTheme Installer functionality
+        function setupInstaller() {
+            const copyBtn = document.getElementById('copyCode');
+            const autoInstallBtn = document.getElementById('autoInstall');
+            const installStatus = document.getElementById('installStatus');
+            const powershellInstall = document.getElementById('powershell-install');
+
+            // Copy code to clipboard
+            copyBtn.addEventListener('click', () => {
+                const code = 'iwr -useb "https://steambrew.app/install.ps1" | iex';
+                navigator.clipboard.writeText(code).then(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                    }, 2000);
+                });
+            });
+
+            // Auto install simulation
+            autoInstallBtn.addEventListener('click', () => {
+                installStatus.textContent = 'Starting SpaceTheme installation...';
+                installStatus.className = 'status-message status-success';
+                installStatus.style.display = 'block';
+
+                // Simulate installation steps
+                setTimeout(() => {
+                    installStatus.textContent = 'Downloading installation package...';
+                }, 1000);
+
+                setTimeout(() => {
+                    installStatus.textContent = 'Installing SpaceTheme components...';
+                }, 2500);
+
+                setTimeout(() => {
+                    installStatus.textContent = 'Applying theme settings...';
+                }, 4000);
+
+                setTimeout(() => {
+                    installStatus.textContent = 'SpaceTheme installation completed successfully!';
+                    installStatus.className = 'status-message status-success';
+                    autoInstallBtn.innerHTML = '<i class="fas fa-check"></i> Installation Complete';
+                    autoInstallBtn.disabled = true;
+                    autoInstallBtn.style.background = 'var(--success)';
+                }, 6000);
+            });
+
+            // PowerShell install from dropdown
+            powershellInstall.addEventListener('click', (e) => {
+                e.preventDefault();
+                window.scrollTo({
+                    top: document.getElementById('installer').offsetTop - 80,
+                    behavior: 'smooth'
+                });
+
+                // Highlight the installer section
+                const installerSection = document.getElementById('installer');
+                installerSection.style.boxShadow = '0 0 0 2px var(--primary)';
+                setTimeout(() => {
+                    installerSection.style.boxShadow = 'none';
+                }, 2000);
+            });
+        }
+
+        // Initialize when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            createBinaryRain();
+            addCardEffects();
+            setupMobileMenu();
+            setupSmoothScrolling();
+            setupInstaller();
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            // Close mobile menu when resizing to desktop
+            if (window.innerWidth > 768) {
+                const navMenu = document.querySelector('.nav-menu');
+                const hamburger = document.querySelector('.hamburger');
+                navMenu.classList.remove('active');
+                hamburger.innerHTML = '<i class="fas fa-bars"></i>';
+            }
+        });
+    </script>
 </body>
+
 </html>
