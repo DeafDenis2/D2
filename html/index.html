@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой профиль</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main class="profile">
+        <div class="avatar">
+            <img src="img/666.png" alt="Avatar">
+        </div>
+        <h1 class="name">DeafDenis2</h1>
+        <p class="bio">Добро пожаловать в мой профиль</p>
+
+        <div class="links">
+            <a class="button steam" id="steam-btn" href="https://steamcommunity.com/id/DeafDenis2Official/" target="_blank" rel="noopener">
+                <i class="fa-brands fa-steam icon"></i> Steam
+            </a>
+            <a class="button telegram" href="https://t.me/DeafDenis2Official" target="_blank" rel="noopener">
+                <i class="fa-brands fa-telegram icon"></i> Telegram Канал D2Official
+            </a>
+            <a class="button donation" href="https://www.donationalerts.com/r/deafdenis2_twitch" target="_blank" rel="noopener">
+                <i class="fa-solid fa-circle-dollar-to-slot icon"></i> Поддержка Донат
+            </a>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById("steam-btn").addEventListener("click", function (e) {
+            e.preventDefault();
+            var profile = "https://steamcommunity.com/id/DeafDenis2Official/";
+            var started = Date.now();
+            window.location.href = "steam://openurl/" + profile;
+            setTimeout(function () {
+                if (Date.now() - started < 1500 && document.hasFocus()) {
+                    window.location.href = profile;
+                }
+            }, 1200);
+        });
+
+        document.getElementById("donation-btn").addEventListener("click", function (e) {
+            e.preventDefault();
+            var panel = document.getElementById("donate-amounts");
+            panel.classList.toggle("open");
+        });
+    </script>
+</body>
+</html>
